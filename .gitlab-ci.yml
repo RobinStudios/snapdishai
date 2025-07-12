@@ -1,0 +1,178 @@
+# Flutter CI/CD Pipeline for SnapDish
+
+image: "ghcr.io/cirruslabs/flutter:3.10.3"
+
+variables:
+  FLUTTER_VERSION: "3.10.3"
+
+stages:
+  - dependencies
+  - test
+  - build
+  - deploy
+
+cache:
+  paths:
+    - .pub-cache/
+
+before_script:
+  - export PATH="$PATH:$HOME/.pub-cache/bin"
+  - flutter --version
+  - flutter doctor -v
+
+# Install dependencies
+dependencies:
+  stage: dependencies
+  script:
+    - flutter pub get
+  artifacts:
+    paths:
+      - .pub-cache/
+    expire_in: 1 hour
+
+# Code quality analysis
+code_quality:
+  stage: test
+  dependencies:
+    - dependencies
+  before_script:
+    - flutter pub global activate dart_code_metrics
+    - export PATH="$PATH:$HOME/.pub-cache/bin"
+  script:
+    - metrics lib -r codeclimate > gl-code-quality-report.json
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
+  allow_failure: true
+
+# Run tests
+test:
+  stage: test
+  dependencies:
+    - dependencies
+  before_script:
+    - flutter pub global activate junitreport
+    - export PATH="$PATH:$HOME/.pub-cache/bin"
+  script:
+    - flutter test --machine --coverage | tojunit -o report.xml
+    - lcov --summary coverage/lcov.info
+    - genhtml coverage/lcov.info --output=coverage
+  coverage: '/lines\.*: \d+\.\d+\%/'
+  artifacts:
+    name: coverage
+    paths:
+      - $CI_PROJECT_DIR/coverage
+    reports:
+      junit: report.xml
+  allow_failure: true
+
+# Build Android APK
+build_android:
+  stage: build
+  dependencies:
+    - dependencies
+  script:
+    - flutter build apk --release
+  artifacts:
+    paths:
+      - build/app/outputs/flutter-apk/app-release.apk
+    expire_in: 1 week
+  only:
+    - main
+    - develop
+
+# Build Android App Bundle (for Play Store)
+build_android_bundle:
+  stage: build
+  dependencies:
+    - dependencies
+  script:
+    - flutter build appbundle --release
+  artifacts:
+    paths:
+      - build/app/outputs/bundle/release/app-release.aab
+    expire_in: 1 week
+  only:
+    - main
+
+# Build iOS (requires macOS runner)
+build_ios:
+  stage: build
+  dependencies:
+    - dependencies
+  script:
+    - flutter build ios --release --no-codesign
+  artifacts:
+    paths:
+      - build/ios/iphoneos/Runner.app
+    expire_in: 1 week
+  only:
+    - main
+  tags:
+    - macos  # This requires a macOS GitLab runner
+
+# Deploy to staging (Android APK to GitLab Pages or file hosting)
+deploy_staging:
+  stage: deploy
+  dependencies:
+    - build_android
+  script:
+    - echo "Deploying Android APK to staging environment"
+    - mkdir public
+    - cp build/app/outputs/flutter-apk/app-release.apk public/snapdish-staging.apk
+    - echo "APK available at $CI_PAGES_URL/snapdish-staging.apk"
+  artifacts:
+    paths:
+      - public
+  environment:
+    name: staging
+    url: $CI_PAGES_URL
+  only:
+    - develop
+
+# Deploy to production
+deploy_production:
+  stage: deploy
+  dependencies:
+    - build_android_bundle
+  script:
+    - echo "Ready for production deployment"
+    - echo "Upload app-release.aab to Google Play Store manually"
+    - echo "Or integrate with fastlane for automated deployment"
+  environment:
+    name: production
+  only:
+    - main
+  when: manual
+
+# Optional: Deploy web version (if you add web support)
+build_web:
+  stage: build
+  dependencies:
+    - dependencies
+  script:
+    - flutter config --enable-web
+    - flutter build web --release
+  artifacts:
+    paths:
+      - build/web/
+    expire_in: 1 week
+  only:
+    - main
+    - develop
+
+deploy_web:
+  stage: deploy
+  dependencies:
+    - build_web
+  script:
+    - echo "Deploying web version to GitLab Pages"
+    - cp -r build/web public
+  artifacts:
+    paths:
+      - public
+  environment:
+    name: web
+    url: $CI_PAGES_URL
+  only:
+    - main
