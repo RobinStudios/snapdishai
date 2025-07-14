@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'explore_screen.dart';
 import 'camera_screen.dart';
 import 'gallery_screen.dart';
 import 'recipes_screen.dart';
@@ -16,6 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
+    const ExploreScreen(),
     const CameraScreen(),
     const GalleryScreen(),
     const RecipesScreen(),
@@ -61,9 +63,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               items: const [
                 BottomNavigationBarItem(
+                  icon: Icon(Icons.explore_outlined),
+                  activeIcon: Icon(Icons.explore),
+                  label: 'Explore',
+                ),
+                BottomNavigationBarItem(
                   icon: Icon(Icons.camera_alt_outlined),
                   activeIcon: Icon(Icons.camera_alt),
-                  label: 'Capture',
+                  label: 'Camera',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.photo_library_outlined),
