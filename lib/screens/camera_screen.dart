@@ -190,6 +190,11 @@ class _CameraScreenState extends State<CameraScreen> {
             child: CameraPreview(_controller!),
           ),
           
+          // Centered white plate camera button
+          Center(
+            child: _buildPlateButton(),
+          ),
+          
           // Camera controls
           Positioned(
             bottom: 0,
@@ -207,8 +212,8 @@ class _CameraScreenState extends State<CameraScreen> {
                       onTap: _pickImageFromGallery,
                     ),
                     
-                    // Plate-style capture button
-                    _buildPlateButton(),
+                    // Spacer to maintain layout balance
+                    const SizedBox(width: 48),
                     
                     // Flip camera button
                     _buildControlButton(
