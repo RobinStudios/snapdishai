@@ -190,9 +190,14 @@ class _CameraScreenState extends State<CameraScreen> {
             child: CameraPreview(_controller!),
           ),
           
-          // Centered white plate camera button
-          Center(
-            child: _buildPlateButton(),
+          // Camera overlay with centered plate button
+          Positioned.fill(
+            child: Container(
+              color: Colors.transparent,
+              child: Center(
+                child: _buildPlateButton(),
+              ),
+            ),
           ),
           
           // Camera controls
