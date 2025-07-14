@@ -207,34 +207,8 @@ class _CameraScreenState extends State<CameraScreen> {
                       onTap: _pickImageFromGallery,
                     ),
                     
-                    // Capture button
-                    GestureDetector(
-                      onTap: _takePicture,
-                      child: Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.3),
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: Center(
-                          child: Container(
-                            width: 60,
-                            height: 60,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Colors.white,
-                            ),
-                            child: _isCapturing
-                                ? const CircularProgressIndicator(
-                                    color: AppTheme.primaryTomato,
-                                  )
-                                : null,
-                          ),
-                        ),
-                      ),
-                    ),
+                    // Plate-style capture button
+                    _buildPlateButton(),
                     
                     // Flip camera button
                     _buildControlButton(
@@ -251,6 +225,60 @@ class _CameraScreenState extends State<CameraScreen> {
     );
   }
 
+  Widget _buildPlateButton() {
+    return GestureDetector(
+      onTap: _takePicture,
+      child: Container(
+        width: 80,
+        height: 80,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Container(
+          margin: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.grey[100],
+            border: Border.all(
+              color: Colors.grey[300]!,
+              width: 1,
+            ),
+          ),
+          child: _isCapturing
+              ? const Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: AppTheme.primaryTomato,
+                      strokeWidth: 2,
+                    ),
+                  ),
+                )
+              : const Center(
+                  child: Icon(
+                    Icons.camera_alt,
+                    color: AppTheme.textSecondary,
+                    size: 28,
+                  ),
+                ),
+        ),
+      ),
+    );
+  }
   Widget _buildPreviewScreen() {
     return Scaffold(
       backgroundColor: Colors.black,
